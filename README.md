@@ -53,6 +53,15 @@ cosign verify ghcr.io/welworx/nextcloud-ocr-smb:stable-apache \
 Third-party Actions used in the workflow are pinned to commit SHA (not a mutable tag),
 and Dependabot keeps those pins current.
 
+## License and disclaimer
+
+This repository is unofficial and not affiliated with, endorsed by, or sponsored
+by Nextcloud GmbH; "Nextcloud" is a trademark of Nextcloud GmbH. It builds
+[nextcloud/docker](https://github.com/nextcloud/docker) unmodified as its base
+image and adds a thin OCR/SMB layer on top — licensed [AGPL-3.0](LICENSE), the
+same license as the upstream `nextcloud/docker` repo it extends. The image is
+provided as-is, without warranty; see the license for details.
+
 ## One-time setup
 
 GHCR packages are private by default even in a public repo. After the first
