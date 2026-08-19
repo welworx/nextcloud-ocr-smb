@@ -1,0 +1,57 @@
+name: Build and publish
+
+on:
+  push:
+    branches: [main]
+    paths: [Dockerfile]
+  schedule:
+    # daily rebuild picks up any new nextcloud:stable-apache upstream image
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (load locally to read version)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}:build
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Read baked-in Nextcloud version
+        id: ncversion
+        run: |
+          version=$(docker run --rm ${{ env.IMAGE }}:build \
+            php -r "include '/usr/src/nextcloud/version.php'; echo implode('.', \$OC_Version);")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Push tags (mirrors upstream: version-apache, stable-apache, latest)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.ncversion.outputs.version }}-apache
+            ${{ env.IMAGE }}:stable-apache
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
