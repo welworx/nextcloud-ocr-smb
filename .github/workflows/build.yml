@@ -29,12 +29,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cache-bust date (forces a fresh apt-get even if the base image is unchanged)
+        id: date
+        run: echo "today=$(date +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
       - name: Build (load locally to read version)
         uses: docker/build-push-action@v6
         with:
           context: .
           load: true
           tags: ${{ env.IMAGE }}:build
+          build-args: CACHEBUST=${{ steps.date.outputs.today }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -54,4 +59,5 @@ jobs:
             ${{ env.IMAGE }}:${{ steps.ncversion.outputs.version }}-apache
             ${{ env.IMAGE }}:stable-apache
             ${{ env.IMAGE }}:latest
+          build-args: CACHEBUST=${{ steps.date.outputs.today }}
           cache-from: type=gha

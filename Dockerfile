@@ -1,8 +1,10 @@
 FROM nextcloud:stable-apache
 
 ARG DEFAULT_PHONE_REGION=AT
+ARG CACHEBUST=1
 
-RUN apt-get update \
+RUN echo "cachebust=${CACHEBUST}" >/dev/null \
+    && apt-get update \
     && apt-get install --assume-yes --no-install-recommends \
        tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu \
        ocrmypdf imagemagick ffmpeg \
