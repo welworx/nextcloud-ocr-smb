@@ -45,7 +45,7 @@ jobs:
             php -r "include '/usr/src/nextcloud/version.php'; echo implode('.', \$OC_Version);")
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Push tags (mirrors upstream: version-apache, stable-apache, latest)
+      - name: "Push tags (mirrors upstream: version-apache, stable-apache, latest)"
         uses: docker/build-push-action@v6
         with:
           context: .
