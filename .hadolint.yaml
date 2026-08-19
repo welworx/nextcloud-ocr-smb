@@ -1,0 +1,3 @@
+ignored:
+  - DL3008 # deliberately unpinned: the daily rebuild exists specifically to track the latest apt security patches
+  - SC2086 # $PHPIZE_DEPS/$CACHEBUST are meant to word-split into apt-get args, not be quoted

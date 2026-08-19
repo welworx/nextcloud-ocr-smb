@@ -13,8 +13,9 @@ ghcr.io/welworx/nextcloud-ocr-smb:<nextcloud-version>-apache   # e.g. 28.0.1-apa
 ```
 
 Tags mirror the upstream `nextcloud` image's own tagging scheme (version-apache /
-stable-apache / latest). GitHub Actions rebuilds and re-tags daily, so `latest` and
-`stable-apache` always track the current upstream `nextcloud:stable-apache` image;
+stable-apache / latest). GitHub Actions rebuilds and re-tags daily — via a cache-bust
+build-arg, `apt-get update`/`install` re-runs every day even if the upstream Nextcloud
+image itself hasn't changed, so `latest`/`stable-apache` stay current on both fronts.
 `<version>-apache` tags accumulate one per Nextcloud release actually built.
 
 ## Usage
@@ -27,6 +28,30 @@ services:
     image: ghcr.io/welworx/nextcloud-ocr-smb:stable-apache
     # ... same volumes/env as the official image
 ```
+
+## Supply chain
+
+Every build in [`.github/workflows/build.yml`](.github/workflows/build.yml):
+
+- lints the `Dockerfile` with [hadolint](https://github.com/hadolint/hadolint)
+- scans the image with [Trivy](https://github.com/aquasecurity/trivy), results in this
+  repo's [Security tab](../../security/code-scanning) (report-only — the image carries
+  a full Debian + Python dependency tree via `ocrmypdf`, so it isn't gated on CVEs that
+  are upstream's to fix, not this Dockerfile's)
+- attaches an SBOM and build provenance attestation to each pushed image
+- signs each pushed image keylessly with [cosign](https://github.com/sigstore/cosign)
+  via GitHub OIDC (no stored signing key)
+
+Verify a pulled image:
+
+```
+cosign verify ghcr.io/welworx/nextcloud-ocr-smb:stable-apache \
+  --certificate-identity-regexp 'https://github.com/welworx/nextcloud-ocr-smb/.github/workflows/build.yml@.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+Third-party Actions used in the workflow are pinned to commit SHA (not a mutable tag),
+and Dependabot keeps those pins current.
 
 ## One-time setup
 
