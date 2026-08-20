@@ -1,8 +1,16 @@
 # nextcloud-ocr-smb
 
-`nextcloud:stable-apache` with `tesseract-ocr` (eng+deu), `ocrmypdf`, `imagemagick`,
-`ffmpeg`, and the `smbclient` PHP extension (for external storage / `files_external`
-SMB mounts) baked in. `default_phone_region` is preset to `AT`.
+[![Build](https://github.com/welworx/nextcloud-ocr-smb/actions/workflows/build.yml/badge.svg)](https://github.com/welworx/nextcloud-ocr-smb/actions/workflows/build.yml)
+[![Image](https://img.shields.io/badge/ghcr.io-nextcloud--ocr--smb-blue?logo=github)](https://github.com/welworx/nextcloud-ocr-smb/pkgs/container/nextcloud-ocr-smb)
+[![Based on Nextcloud](https://img.shields.io/badge/based%20on-Nextcloud-0082C9?logo=nextcloud&logoColor=white)](https://nextcloud.com)
+[![License](https://img.shields.io/github/license/welworx/nextcloud-ocr-smb)](LICENSE)
+
+**[Nextcloud](https://nextcloud.com) Docker image with OCR and SMB support built in** —
+a drop-in replacement for the official `nextcloud:stable-apache` image.
+
+Adds `tesseract-ocr` (eng+deu), `ocrmypdf`, `imagemagick`, `ffmpeg`, and the
+`smbclient` PHP extension (for external storage / `files_external` SMB mounts).
+`default_phone_region` is preset to `AT`.
 
 ## Image
 
@@ -61,10 +69,3 @@ by Nextcloud GmbH; "Nextcloud" is a trademark of Nextcloud GmbH. It builds
 image and adds a thin OCR/SMB layer on top — licensed [AGPL-3.0](LICENSE), the
 same license as the upstream `nextcloud/docker` repo it extends. The image is
 provided as-is, without warranty; see the license for details.
-
-## One-time setup
-
-GHCR packages are private by default even in a public repo. After the first
-Actions run publishes the image, set the package visibility to public in
-GitHub: repo → Packages → `nextcloud-ocr-smb` → Package settings → Change
-visibility.
