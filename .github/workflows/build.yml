@@ -96,4 +96,4 @@ jobs:
       - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
 
       - name: Sign the published image (keyless, via GitHub OIDC)
-        run: cosign sign --yes "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
+        run: cosign sign --yes --registry-referrers-mode oci-1-1 "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
