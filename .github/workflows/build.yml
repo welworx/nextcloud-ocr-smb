@@ -118,3 +118,28 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: cosign sign --yes --registry-referrers-mode oci-1-1 "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
+
+  # retention: each build leaves ~5 package versions (index, manifest, attestations, signature).
+  # Group them into builds by creation time (gap > 5 min) and keep only the newest few.
+  cleanup:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      KEEP_BUILDS: "3"
+    steps:
+      - name: Delete package versions older than the newest builds
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pkg="users/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions"
+          gh api --paginate "$pkg?per_page=100" | jq -s 'add' | jq -r --argjson keep "$KEEP_BUILDS" '
+            map({id, t: (.created_at | fromdateiso8601)}) | sort_by(.t) | reverse
+            | reduce .[] as $v ({c: 0, last: null, out: []};
+                (if .last != null and (.last - $v.t) > 300 then .c += 1 else . end)
+                | .last = $v.t
+                | .out += [{id: $v.id, c: .c}])
+            | .out[] | select(.c >= $keep) | .id' > old_ids
+          echo "deleting $(wc -l < old_ids) old package versions"
+          while read -r id; do gh api -X DELETE "$pkg/$id" --silent; done < old_ids
