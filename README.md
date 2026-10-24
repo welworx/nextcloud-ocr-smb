@@ -43,12 +43,10 @@ services:
 Every build in [`.github/workflows/build.yml`](.github/workflows/build.yml):
 
 - lints the `Dockerfile` with [hadolint](https://github.com/hadolint/hadolint)
-- scans the image with [Trivy](https://github.com/aquasecurity/trivy), results in this
-  repo's [Security tab](../../security/code-scanning) (report-only — the image carries
-  a full Debian + Python dependency tree via `ocrmypdf`, so it isn't gated on CVEs that
-  are upstream's to fix, not this Dockerfile's)
-- attaches an SBOM and build provenance attestation to each pushed image
-- signs each pushed image keylessly with [cosign](https://github.com/sigstore/cosign)
+- attaches an SBOM and a full (`mode=max`) SLSA build provenance attestation to each
+  pushed image
+- runs `apt-get upgrade` on every build (packages held back by dependency changes are
+  skipped); fixes that need a new upstream `nextcloud` image arrive with the next rebuild- signs each pushed image keylessly with [cosign](https://github.com/sigstore/cosign)
   via GitHub OIDC (no stored signing key)
 
 Verify a pulled image:
