@@ -21,9 +21,10 @@ ghcr.io/welworx/nextcloud-ocr-smb:<nextcloud-version>-apache   # e.g. 28.0.1-apa
 ```
 
 Tags mirror the upstream `nextcloud` image's own tagging scheme (version-apache /
-stable-apache / latest). GitHub Actions rebuilds and re-tags daily — via a cache-bust
-build-arg, `apt-get update`/`install` re-runs every day even if the upstream Nextcloud
-image itself hasn't changed, so `latest`/`stable-apache` stay current on both fronts.
+stable-apache / latest). GitHub Actions checks every 6 hours and rebuilds
+and re-tags whenever the upstream Nextcloud image changed or the published image has
+pending `apt` upgrades (each build runs `apt-get upgrade`), so `latest`/`stable-apache`
+stay current on both fronts.
 `<version>-apache` tags accumulate one per Nextcloud release actually built.
 
 ## Usage
@@ -42,12 +43,10 @@ services:
 Every build in [`.github/workflows/build.yml`](.github/workflows/build.yml):
 
 - lints the `Dockerfile` with [hadolint](https://github.com/hadolint/hadolint)
-- scans the image with [Trivy](https://github.com/aquasecurity/trivy), results in this
-  repo's [Security tab](../../security/code-scanning) (report-only — the image carries
-  a full Debian + Python dependency tree via `ocrmypdf`, so it isn't gated on CVEs that
-  are upstream's to fix, not this Dockerfile's)
-- attaches an SBOM and build provenance attestation to each pushed image
-- signs each pushed image keylessly with [cosign](https://github.com/sigstore/cosign)
+- attaches an SBOM and a full (`mode=max`) SLSA build provenance attestation to each
+  pushed image
+- runs `apt-get upgrade` on every build (packages held back by dependency changes are
+  skipped); fixes that need a new upstream `nextcloud` image arrive with the next rebuild- signs each pushed image keylessly with [cosign](https://github.com/sigstore/cosign)
   via GitHub OIDC (no stored signing key)
 
 Verify a pulled image:
