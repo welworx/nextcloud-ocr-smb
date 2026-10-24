@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
           dockerfile: Dockerfile
@@ -66,6 +68,8 @@ jobs:
       id-token: write # cosign keyless signing via OIDC
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
@@ -123,6 +127,7 @@ jobs:
   # Group them into builds by creation time (gap > 5 min) and keep only the newest few.
   cleanup:
     needs: build
+    if: github.ref == 'refs/heads/main' # never delete from a branch-triggered run
     runs-on: ubuntu-latest
     permissions:
       packages: write
