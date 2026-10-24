@@ -25,7 +25,8 @@ stable-apache / latest). GitHub Actions checks every 6 hours and rebuilds
 and re-tags whenever the upstream Nextcloud image changed or the published image has
 pending `apt` upgrades (each build runs `apt-get upgrade`), so `latest`/`stable-apache`
 stay current on both fronts.
-`<version>-apache` tags accumulate one per Nextcloud release actually built.
+Only the newest 3 builds are kept in the registry (older images, SBOMs and signatures
+are deleted after each build), so older version tags and digests do not stay available.
 
 ## Usage
 

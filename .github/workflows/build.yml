@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
           dockerfile: Dockerfile
@@ -66,6 +68,8 @@ jobs:
       id-token: write # cosign keyless signing via OIDC
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
@@ -118,3 +122,29 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: cosign sign --yes --registry-referrers-mode oci-1-1 "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
+
+  # retention: each build leaves ~5 package versions (index, manifest, attestations, signature).
+  # Group them into builds by creation time (gap > 5 min) and keep only the newest few.
+  cleanup:
+    needs: build
+    if: github.ref == 'refs/heads/main' # never delete from a branch-triggered run
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      KEEP_BUILDS: "3"
+    steps:
+      - name: Delete package versions older than the newest builds
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pkg="users/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions"
+          gh api --paginate "$pkg?per_page=100" | jq -s 'add' | jq -r --argjson keep "$KEEP_BUILDS" '
+            map({id, t: (.created_at | fromdateiso8601)}) | sort_by(.t) | reverse
+            | reduce .[] as $v ({c: 0, last: null, out: []};
+                (if .last != null and (.last - $v.t) > 300 then .c += 1 else . end)
+                | .last = $v.t
+                | .out += [{id: $v.id, c: .c}])
+            | .out[] | select(.c >= $keep) | .id' > old_ids
+          echo "deleting $(wc -l < old_ids) old package versions"
+          while read -r id; do gh api -X DELETE "$pkg/$id" --silent; done < old_ids
