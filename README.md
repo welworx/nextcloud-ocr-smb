@@ -21,9 +21,10 @@ ghcr.io/welworx/nextcloud-ocr-smb:<nextcloud-version>-apache   # e.g. 28.0.1-apa
 ```
 
 Tags mirror the upstream `nextcloud` image's own tagging scheme (version-apache /
-stable-apache / latest). GitHub Actions rebuilds and re-tags daily — via a cache-bust
-build-arg, `apt-get update`/`install` re-runs every day even if the upstream Nextcloud
-image itself hasn't changed, so `latest`/`stable-apache` stay current on both fronts.
+stable-apache / latest). GitHub Actions checks every 6 hours and rebuilds
+and re-tags whenever the upstream Nextcloud image changed or the published image has
+pending `apt` upgrades (each build runs `apt-get upgrade`), so `latest`/`stable-apache`
+stay current on both fronts.
 `<version>-apache` tags accumulate one per Nextcloud release actually built.
 
 ## Usage
