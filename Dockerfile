@@ -13,6 +13,8 @@ RUN echo "cachebust=${CACHEBUST}" >/dev/null \
        libsmbclient-dev $PHPIZE_DEPS \
     && pecl install smbclient \
     && docker-php-ext-enable smbclient \
+    && sed -i -e '/pattern="PDF"/d' -e '/domain="coder"/{s/PDF,//;s/,PDF//}' /etc/ImageMagick-*/policy.xml \
+    && ! grep -E 'domain="coder".*rights="none".*PDF' /etc/ImageMagick-*/policy.xml \
     && apt-get purge --assume-yes --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
        libsmbclient-dev $PHPIZE_DEPS \
     && apt-get clean \
